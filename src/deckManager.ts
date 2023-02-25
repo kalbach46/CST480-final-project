@@ -117,3 +117,5 @@ router.delete("/deck/:deckid", async (req: any, res:any) =>{
     }
     
 })
+
+export const deckManager = router;
