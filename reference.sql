@@ -7,10 +7,10 @@ insert into users(id, username, password) values (?,?,?)
 
 
 -- Get all user decks | assuming already have user id
-select * from user_deck where id = ?;
+select * from user_deck where userid = ?;
 
 -- get number of decks user have already
-select count(*) from user_deck where id = ?;
+select count(*) from user_deck where userid = ?;
 
 -- delete deck | meaning user have to send deck id with them
 delete from user_deck where deckid=?
