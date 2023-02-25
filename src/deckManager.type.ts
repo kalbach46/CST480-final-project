@@ -11,5 +11,7 @@ export const DeckSchema = z.object({
     deckName: string().min(1),
 })
 
+
 export type DeckBody = z.infer<typeof DeckSchema>
-export type DeckRequestBody = Request<{}, {}, DeckBody>
+export type DeckPOSTRequestBody = Request<{}, {}, DeckBody>
+export type DeckPutRequestBody = Request<{ deckid: string}, {}, DeckBody>
