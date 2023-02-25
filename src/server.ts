@@ -21,10 +21,6 @@ app.use('/deckManager', deckManager);
 app.use('/accountManager', accountManager);
 app.use('/gameManager', gameManager);
 
-app.get("/api/test", (req, res:Response) => {
-    res.send("TEST");
-});
-
 let port = 3000;
 let host = "localhost";
 let protocol = "http";
