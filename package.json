@@ -5,10 +5,11 @@
     "start": "cd out && node server.js",
     "watch": "npm run build && tsc-watch --onSuccess \"npm run start\"",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand --rootDir=src",
-    "test-data": "npm run setup && sqlite3 database.db < test-data.sql"
+    "test-data": "npm run setup && sqlite3 database.db < insert.sql"
   },
   "type": "module",
   "dependencies": {
+    "@types/cookie-parser": "^1.4.3",
     "argon2": "^0.30.3",
     "cookie-parser": "^1.4.6",
     "express": "^4.18.2",

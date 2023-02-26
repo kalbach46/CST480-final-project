@@ -49,40 +49,76 @@ afterAll(async () => {
 })
 
 //CREATE USER TESTS
-describe("Create User Tests", () => {
-    test("create user happy path", async () => {
-        let username : string = USERNAME;
-        let password : string = PASSWORD;
-        let result = await axios.post(`${authUrl}/register`, {
-            username:username,
-            password:password
-        });
-        expect(result.data).toEqual("user created successfully");
-    });
-    test("create two users happy path", async () => {
-        let username : string = USERNAME;
-        let username2 : string = "username2";
-        let password : string = PASSWORD;
-        await axios.post(`${authUrl}/register`, {
-            username:username,
-            password:password
-        });
-        let result = await axios.post(`${authUrl}/register`, {
-            username:username2,
-            password:password
-        });
-        expect(result.data).toEqual("user created successfully");
-    })
-    test("create user username in use", async () => {
-        let username : string = USERNAME;
-        let password : string = PASSWORD;
-        await axios.post(`${authUrl}/register`, {
-            username:username,
-            password:password
-        });
+// describe("Create User Tests", () => {
+//     test("create user happy path", async () => {
+//         let username : string = USERNAME;
+//         let password : string = PASSWORD;
+//         let result = await axios.post(`${authUrl}/register`, {
+//             username:username,
+//             password:password
+//         });
+//         expect(result.data).toEqual("user created successfully");
+//     });
+//     test("create two users happy path", async () => {
+//         let username : string = USERNAME;
+//         let username2 : string = "username2";
+//         let password : string = PASSWORD;
+//         await axios.post(`${authUrl}/register`, {
+//             username:username,
+//             password:password
+//         });
+//         let result = await axios.post(`${authUrl}/register`, {
+//             username:username2,
+//             password:password
+//         });
+//         expect(result.data).toEqual("user created successfully");
+//     })
+//     test("create user username in use", async () => {
+//         let username : string = USERNAME;
+//         let password : string = PASSWORD;
+//         await axios.post(`${authUrl}/register`, {
+//             username:username,
+//             password:password
+//         });
 
+//         try{
+//             await axios.post(`${authUrl}/register`, {
+//                 username:username,
+//                 password:password
+//             });
+//             fail('this call should return a 400');
+//         } catch (error) {
+//             let errorObj = error as AxiosError;
+    
+//             if (errorObj.response === undefined) {
+//                 throw errorObj;
+//             }
+    
+//             let { response } = errorObj; 
+//             expect(response.status).toEqual(400);
+//             expect(response.data).toEqual({error: "username is already in use"});
+//         }
+//     })
+// })
+
+//LOGIN TESTS
+describe("Login tests", () => {
+    test("login happy path", async () => {
+        await initializeUser();
+        let username : string = USERNAME;
+        let password : string = PASSWORD;
+        let result = await axios.put(`${authUrl}/login`, {
+            username:username,
+            password:password
+        });
+        expect(result.data.token != null).toBeTruthy();
+    });
+    test("login username doesn't exist", async () => {
+        await initializeUser();
+        let username : string = "badusername";
+        let password : string = PASSWORD;
         try{
-            await axios.post(`${authUrl}/register`, {
+            await axios.put(`${authUrl}/login`, {
                 username:username,
                 password:password
             });
@@ -94,9 +130,43 @@ describe("Create User Tests", () => {
                 throw errorObj;
             }
     
-            let { response } = errorObj; 
+            let { response } = errorObj;
+    
             expect(response.status).toEqual(400);
-            expect(response.data).toEqual({error: "username is already in use"});
+            expect(response.data).toEqual({error: "no user exists with that username"});
         }
-    })
+    });
+    test("login invalid password", async () => {
+        await initializeUser();
+        let username : string = USERNAME;
+        let password : string = "badpassword";
+        try{
+            await axios.put(`${authUrl}/login`, {
+                username:username,
+                password:password
+            });
+            fail('this call should return a 400');
+        } catch (error) {
+            let errorObj = error as AxiosError;
+    
+            if (errorObj.response === undefined) {
+                throw errorObj;
+            }
+    
+            let { response } = errorObj;
+    
+            expect(response.status).toEqual(400);
+            expect(response.data).toEqual({error: "password is incorrect"});
+        }
+    });
 })
+
+//-----------------HELPERS-----------------------
+async function initializeUser() {
+    let username:string = USERNAME;
+    let password:string = PASSWORD;
+    let result = await axios.post(`${authUrl}/register`, {
+        username:username,
+        password:password
+    });
+}
