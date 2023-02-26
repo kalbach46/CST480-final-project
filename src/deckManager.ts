@@ -3,10 +3,21 @@ import express from "express";
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 import { v4 as uuidv4 } from 'uuid';
+import { verifyToken } from './server.js';
+import cookieParser from "cookie-parser";
 
 
 let router = express.Router();
 router.use(express.json());
+router.use(cookieParser());
+router.use((req, res, next) => {
+    if(!verifyToken(req.cookies.token)){
+        res.set({'Set-Cookie':[`loggedIn=false; Path=/`]});
+        res.send("invalid token");
+        return;
+    }
+    next();
+})
 // Add cred middleware here -> Waitig now
 // router.use(credientialMiddleware);
 
@@ -117,3 +128,5 @@ router.delete("/deck/:deckid", async (req: any, res:any) =>{
     }
     
 })
+
+export const deckManager = router;
