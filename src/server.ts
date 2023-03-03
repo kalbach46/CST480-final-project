@@ -10,15 +10,18 @@ import { gameManager } from "./gameManager.js";
 let app = express();
 app.use(express.json());
 
-let tokens:string[] = [];
+let tokens: {[token:string]:string} = {};
 
-export function addToken(token:string){
-    tokens.push(token);
-    console.log("TOKENS:", tokens);
+export function addToken(token:string, userid:string){
+    tokens[token] = userid;
 }
 
 export function verifyToken(token:string){
-    return tokens.indexOf(token) != -1;
+    return tokens[token] != null;
+}
+
+export function getUser(token:string){
+    return tokens[token];
 }
 
 let __dirname = url.fileURLToPath(new URL("..", import.meta.url));

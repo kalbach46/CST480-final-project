@@ -1,11 +1,10 @@
-import Cookies from 'js-cookie';
+import Navbar from '../Components/Navbar';
 
 export default function Game() {
     return (
         <div>
-            {Cookies.get('loggedIn')==='true'?
-           <p>GAME</p>
-           : <a href='/'>Login</a>}
+            <Navbar/>
+            <p>GAME</p>
         </div>
     )
 }

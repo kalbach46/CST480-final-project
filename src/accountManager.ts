@@ -5,9 +5,12 @@ import * as url from "url";
 import argon2 from "argon2";
 import crypto from "crypto";
 import {v4 as uuidv4} from 'uuid';
-import { addToken } from './server.js';
+import { addToken, getUser } from './server.js';
+import cookieParser from "cookie-parser";
 
 const router = express.Router();
+
+router.use(cookieParser());
 
 
 let __dirname = url.fileURLToPath(new URL("..", import.meta.url));
@@ -43,6 +46,22 @@ async function usernameIsUnique(username:string){
     return out.length==0;
 }
 
+router.get('/user', async (req, res) => {
+    let username = '';
+    if(req.cookies.token){
+        let userid = getUser(req.cookies.token);
+        let statement = await db.prepare(
+            'SELECT * FROM users WHERE id=?'
+        );
+        await statement.bind([userid]);
+        let user = await statement.get();
+        if(user){
+            username = user.username;
+        }
+    }
+    res.status(200).send({username:username});
+})
+
 router.post('/register', async (req, res) => {
     let username:string = req.body.username;
     let password:string = req.body.password;
@@ -71,7 +90,7 @@ router.put('/login', async (req, res) => {
     let hashed_pass = user.password;
     if(await argon2.verify(hashed_pass, password)){
         let token = crypto.randomBytes(16).toString('hex');
-        addToken(token);
+        addToken(token, user.id);
         res.set({'Set-Cookie':[`loggedIn=true; Path=/`, `token=${token}; httponly; Path=/`]});
         return res.json({token:token});
     } else {

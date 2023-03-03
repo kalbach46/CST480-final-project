@@ -9,7 +9,11 @@ type FormValues = {
     password: string;
 }
 
-export default function Login() {
+interface ILogin {
+    setLoggedInState:(state:boolean) => void
+}
+
+const Login:React.FC<ILogin> = ({setLoggedInState}) => {
     const {control, handleSubmit, formState: {errors}, reset} = useForm<FormValues>();
     const [error, setError] = useState<string>('');
     let navigate:NavigateFunction = useNavigate();
@@ -19,8 +23,9 @@ export default function Login() {
         let password:string = data.password;
         axios.put('/api/accountManager/login', {username, password})
         .then(() => {
+            setLoggedInState(true);
             setError('');
-            navigate('/home');
+            navigate('/');
         })
         .catch((error) => {
             setError(error.response.data.error);
@@ -87,3 +92,5 @@ export default function Login() {
         </div>
     )
 }
+
+export default Login;

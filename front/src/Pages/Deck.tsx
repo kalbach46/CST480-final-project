@@ -1,11 +1,10 @@
-import Cookies from 'js-cookie';
+import Navbar from '../Components/Navbar';
 
 export default function Deck() {
     return (
         <div>
-            {Cookies.get('loggedIn')==='true'?
-           <p>DECK</p>
-           : <a href='/'>Login</a>}
+            <Navbar/>
+            <p>DECK</p>
         </div>
     )
 }

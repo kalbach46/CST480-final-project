@@ -162,6 +162,60 @@ describe("Login tests", () => {
     });
 })
 
+//GET USER TESTS
+// describe("Get user tests", () => {
+//     test("get user happy path", async () => {
+//         await initializeUser();
+//         let username : string = USERNAME;
+//         let password : string = PASSWORD;
+//         let loginResult = await axios.put(`${authUrl}/login`, {
+//             username:username,
+//             password:password
+//         });
+//         let token = loginResult.data.token;
+//         let result = await axios.get(`${authUrl}/user`, {
+//             headers:{
+//                 Cookie: `token=${token}`
+//             }
+//         });
+//         expect(result.data.username).toEqual("kalbach46");
+//     });
+
+//     test("get user no user logged in", async () => {
+//         await initializeUser();
+//         let username : string = USERNAME;
+//         let password : string = PASSWORD;
+//         try{
+//             let loginResult = await axios.put(`${authUrl}/login`, {
+//                 username:username,
+//                 password:password
+//             });
+//             let token = loginResult.data.token;
+//             let result = await axios.get(`${authUrl}/user`, {
+//                 headers:{
+//                     Cookie: `token=${token}`
+//                 }
+//             });
+//             fail('this call should return a 400');
+//         } catch (error) {
+//             let errorObj = error as AxiosError;
+    
+//             if (errorObj.response === undefined) {
+//                 throw errorObj;
+//             }
+    
+//             let { response } = errorObj;
+    
+//             expect(response.status).toEqual(400);
+//             expect(response.data).toEqual({error: "no user exists with that username"});
+//         }
+//     });
+
+//     // test("get user username doesn't exist", async () => {
+
+//     // })
+// })
+
 //-----------------HELPERS-----------------------
 async function initializeUser() {
     let username:string = USERNAME;

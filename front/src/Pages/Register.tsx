@@ -20,7 +20,7 @@ export default function Register() {
         axios.post('/api/accountManager/register', {username, password})
         .then(() => {
             setError('');
-            navigate('/');
+            navigate('/login');
         })
         .catch((error) => {
             setError(error.response.data.error);
