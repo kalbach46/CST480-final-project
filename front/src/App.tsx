@@ -4,6 +4,7 @@ import Login from './Pages/Login';
 import Home from './Pages/Home';
 import Deck from './Pages/Deck';
 import Game from './Pages/Game';
+import Register from './Pages/Register';
 import {AppBar, Button, Toolbar} from '@mui/material';
 import './App.css';
 
@@ -21,10 +22,11 @@ function App() {
       <Router>
         <div>
           <Routes>
-          <Route path="/" element={<Login />} />       
-          <Route path="/home" element={<Home />} />       
+            <Route path="/" element={<Login />} />       
+            <Route path="/home" element={<Home />} />       
             <Route path="/deck" element={<Deck />} />
             <Route path="/game" element={<Game />} />
+            <Route path="/register" element={<Register />} />
           </Routes>
         </div>
       </Router>
