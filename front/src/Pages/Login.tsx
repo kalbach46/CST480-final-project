@@ -17,7 +17,7 @@ export default function Login() {
     const onSubmit: SubmitHandler<FormValues> = data => {
         let username:string = data.username;
         let password:string = data.password;
-        axios.put('/accountManager/login', {username, password})
+        axios.put('/api/accountManager/login', {username, password})
         .then(() => {
             setError('');
             navigate('/home');

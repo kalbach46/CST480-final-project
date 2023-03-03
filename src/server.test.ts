@@ -6,8 +6,9 @@ import * as url from "url";
 let port = 3000;
 let host = "localhost";
 let protocol = "http";
+let api = "api";
 let accountManager = "accountManager";
-let authUrl = `${protocol}://${host}:${port}/${accountManager}`;
+let authUrl = `${protocol}://${host}:${port}/${api}/${accountManager}`;
 
 
 let __dirname = url.fileURLToPath(new URL("..", import.meta.url));
@@ -49,57 +50,57 @@ afterAll(async () => {
 })
 
 //CREATE USER TESTS
-// describe("Create User Tests", () => {
-//     test("create user happy path", async () => {
-//         let username : string = USERNAME;
-//         let password : string = PASSWORD;
-//         let result = await axios.post(`${authUrl}/register`, {
-//             username:username,
-//             password:password
-//         });
-//         expect(result.data).toEqual("user created successfully");
-//     });
-//     test("create two users happy path", async () => {
-//         let username : string = USERNAME;
-//         let username2 : string = "username2";
-//         let password : string = PASSWORD;
-//         await axios.post(`${authUrl}/register`, {
-//             username:username,
-//             password:password
-//         });
-//         let result = await axios.post(`${authUrl}/register`, {
-//             username:username2,
-//             password:password
-//         });
-//         expect(result.data).toEqual("user created successfully");
-//     })
-//     test("create user username in use", async () => {
-//         let username : string = USERNAME;
-//         let password : string = PASSWORD;
-//         await axios.post(`${authUrl}/register`, {
-//             username:username,
-//             password:password
-//         });
+describe("Create User Tests", () => {
+    test("create user happy path", async () => {
+        let username : string = USERNAME;
+        let password : string = PASSWORD;
+        let result = await axios.post(`${authUrl}/register`, {
+            username:username,
+            password:password
+        });
+        expect(result.data).toEqual("user created successfully");
+    });
+    test("create two users happy path", async () => {
+        let username : string = USERNAME;
+        let username2 : string = "username2";
+        let password : string = PASSWORD;
+        await axios.post(`${authUrl}/register`, {
+            username:username,
+            password:password
+        });
+        let result = await axios.post(`${authUrl}/register`, {
+            username:username2,
+            password:password
+        });
+        expect(result.data).toEqual("user created successfully");
+    })
+    test("create user username in use", async () => {
+        let username : string = USERNAME;
+        let password : string = PASSWORD;
+        await axios.post(`${authUrl}/register`, {
+            username:username,
+            password:password
+        });
 
-//         try{
-//             await axios.post(`${authUrl}/register`, {
-//                 username:username,
-//                 password:password
-//             });
-//             fail('this call should return a 400');
-//         } catch (error) {
-//             let errorObj = error as AxiosError;
+        try{
+            await axios.post(`${authUrl}/register`, {
+                username:username,
+                password:password
+            });
+            fail('this call should return a 400');
+        } catch (error) {
+            let errorObj = error as AxiosError;
     
-//             if (errorObj.response === undefined) {
-//                 throw errorObj;
-//             }
+            if (errorObj.response === undefined) {
+                throw errorObj;
+            }
     
-//             let { response } = errorObj; 
-//             expect(response.status).toEqual(400);
-//             expect(response.data).toEqual({error: "username is already in use"});
-//         }
-//     })
-// })
+            let { response } = errorObj; 
+            expect(response.status).toEqual(400);
+            expect(response.data).toEqual({error: "username is already in use"});
+        }
+    })
+})
 
 //LOGIN TESTS
 describe("Login tests", () => {

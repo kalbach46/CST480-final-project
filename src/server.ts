@@ -29,9 +29,9 @@ let db = await open({
 });
 await db.get("PRAGMA foreign_keys = ON");
 
-app.use('/deckManager', deckManager);
-app.use('/accountManager', accountManager);
-app.use('/gameManager', gameManager);
+app.use('/api/deckManager', deckManager);
+app.use('/api/accountManager', accountManager);
+app.use('/api/gameManager', gameManager);
 
 let port = 3000;
 let host = "localhost";
