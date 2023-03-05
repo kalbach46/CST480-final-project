@@ -1,30 +1,34 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes} from 'react-router-dom';
+import {useEffect, useState} from 'react';
 import Login from './Pages/Login';
 import Home from './Pages/Home';
 import Deck from './Pages/Deck';
 import Game from './Pages/Game';
-import {AppBar, Button, Toolbar} from '@mui/material';
+import Register from './Pages/Register';
 import './App.css';
+import Cookies from 'js-cookie';
 
 function App() {
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    if(Cookies.get("loggedIn")==='true'){
+      setLoggedIn(true);
+    } else {
+      setLoggedIn(false);
+    }
+  }, [loggedIn])
+
   return (
     <div>
-      <AppBar position="sticky" style={{marginBottom:'20px', background: '#f0f0f0'}}>
-        <Toolbar>
-          <Button href="/">Login</Button>
-          <Button href="/home">Home</Button>
-          <Button href="/deck">Deck</Button>
-          <Button href="/game">Play</Button>
-        </Toolbar>
-      </AppBar>
       <Router>
         <div>
           <Routes>
-          <Route path="/" element={<Login />} />       
-          <Route path="/home" element={<Home />} />       
-            <Route path="/deck" element={<Deck />} />
-            <Route path="/game" element={<Game />} />
+            <Route path="/" element={loggedIn ? <Home/> : <Login setLoggedInState={(state:boolean) => setLoggedIn(state)}/>} />       
+            <Route path="/deck" element={loggedIn ? <Deck/> : <Login setLoggedInState={(state:boolean) => setLoggedIn(state)}/>} />
+            <Route path="/game" element={loggedIn ? <Game/> : <Login setLoggedInState={(state:boolean) => setLoggedIn(state)}/>} />
+            <Route path="/login" element={<Login setLoggedInState={(state:boolean) => setLoggedIn(state)}/>} />       
+            <Route path="/register" element={<Register/>} />
           </Routes>
         </div>
       </Router>

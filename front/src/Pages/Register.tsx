@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import { useNavigate, NavigateFunction, Link } from 'react-router-dom';
+import { useNavigate, NavigateFunction } from 'react-router-dom';
 import {TextField, InputLabel, Button} from '@mui/material';
 import {Controller, useForm, SubmitHandler} from 'react-hook-form';
 import axios from 'axios';
@@ -9,11 +9,7 @@ type FormValues = {
     password: string;
 }
 
-interface ILogin {
-    setLoggedInState:(state:boolean) => void
-}
-
-const Login:React.FC<ILogin> = ({setLoggedInState}) => {
+export default function Register() {
     const {control, handleSubmit, formState: {errors}, reset} = useForm<FormValues>();
     const [error, setError] = useState<string>('');
     let navigate:NavigateFunction = useNavigate();
@@ -21,11 +17,10 @@ const Login:React.FC<ILogin> = ({setLoggedInState}) => {
     const onSubmit: SubmitHandler<FormValues> = data => {
         let username:string = data.username;
         let password:string = data.password;
-        axios.put('/api/accountManager/login', {username, password})
+        axios.post('/api/accountManager/register', {username, password})
         .then(() => {
-            setLoggedInState(true);
             setError('');
-            navigate('/');
+            navigate('/login');
         })
         .catch((error) => {
             setError(error.response.data.error);
@@ -34,7 +29,7 @@ const Login:React.FC<ILogin> = ({setLoggedInState}) => {
 
     return (
         <div>
-            <h2>Login</h2>
+            <h2>Create Account</h2>
             <Controller
                         name="username"
                         control={control}
@@ -81,10 +76,7 @@ const Login:React.FC<ILogin> = ({setLoggedInState}) => {
                         )}
                     />
                     <div>
-                        <Button variant='outlined' onClick={handleSubmit(onSubmit)}>Login</Button>
-                    </div>
-                    <div>
-                        <Button component={Link} to="/register">Register</Button>
+                        <Button variant='outlined' onClick={handleSubmit(onSubmit)}>Create Account</Button>
                     </div>
             <div>
                 {error}
@@ -92,5 +84,3 @@ const Login:React.FC<ILogin> = ({setLoggedInState}) => {
         </div>
     )
 }
-
-export default Login;

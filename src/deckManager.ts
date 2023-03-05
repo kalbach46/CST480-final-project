@@ -5,6 +5,7 @@ import { open } from "sqlite";
 import { v4 as uuidv4 } from 'uuid';
 import { verifyToken } from './server.js';
 import cookieParser from "cookie-parser";
+import { getUser } from './server.js';
 
 
 let router = express.Router();
@@ -16,6 +17,7 @@ router.use((req, res, next) => {
         res.send("invalid token");
         return;
     }
+    res.locals.userid = getUser(req.cookies.token);
     next();
 })
 // Add cred middleware here -> Waitig now

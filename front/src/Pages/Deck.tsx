@@ -1,7 +1,10 @@
+import Navbar from '../Components/Navbar';
+
 export default function Deck() {
     return (
         <div>
-            DECK
+            <Navbar/>
+            <p>DECK</p>
         </div>
     )
 }
