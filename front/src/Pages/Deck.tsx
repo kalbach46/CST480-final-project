@@ -1,15 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-import Navbar from '../Components/Navbar';
-=======
-import React, { useEffect, useState, useRef } from "react";
-=======
 import React, { useEffect, useState, useRef, useImperativeHandle, forwardRef, Ref } from "react";
->>>>>>> 6377619... adding UI for deckbuild-TEMP
-=======
-import React, { useEffect, useState, useRef, useImperativeHandle, forwardRef, Ref } from "react";
->>>>>>> 637761940b1f845a3eb160796cf138f77417ac2e
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
@@ -152,17 +141,6 @@ const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
 })
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    useEffect(()=>{
-        // const 
-    })
-}
->>>>>>> ceb483a... basic frontend for deck building-not done
-=======
->>>>>>> 6377619... adding UI for deckbuild-TEMP
-=======
->>>>>>> 637761940b1f845a3eb160796cf138f77417ac2e
 
 export default function Deck() {
     // Assume user have login cookie
@@ -183,21 +161,6 @@ export default function Deck() {
 
 
     return (
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-        <div>
-            <Navbar/>
-            <p>DECK</p>
-        </div>
-=======
-        <div> DECK
-            <CardPoll/>
-         </div>
->>>>>>> ceb483a... basic frontend for deck building-not done
-=======
-=======
->>>>>>> 637761940b1f845a3eb160796cf138f77417ac2e
         // <div style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
         // Currently testing | my screen is too small
         <div>
@@ -217,6 +180,5 @@ export default function Deck() {
                 />
             </div>
         </div>
->>>>>>> 6377619... adding UI for deckbuild-TEMP
     )
 }
