@@ -39,7 +39,7 @@ router.post("/deck", async (req: DeckPOSTRequestBody, res: any) =>{
     const userid = res.locals.userid; // Should come from middleware
 
     // Check number of decks user have
-    const numDecks = await db.get("select count(*) from user_deck where userid = ?", [userid]);
+    const [numDecks] = await db.all("select count(*) from user_deck where userid = ?", [userid]);
     if (numDecks["count(*)"] >= ALLOWED_NUM_DECKS){
         return res.status(400).json({message : "You have too much deck, can't add new one"})
     }
@@ -95,11 +95,8 @@ router.put("/deck/:deckid", async (req: DeckPutRequestBody, res: any) =>{
 // Get all decks for user
 router.get("/deck", async (req: any, res:any) =>{
     try{
-        const decks = await db.get("select * from user_deck where userid = ?",[res.locals.userid]);
-        if (decks === undefined){
-            return res.status(403).json({error : "No decks found"});
-        }
-        return res.json({decks: [decks]});
+        const decks = await db.all("select * from user_deck where userid = ?",[res.locals.userid]);
+        return res.json({decks: decks});
     } catch (e){
         return res.status(500).json({error : "Server query error"});
     }

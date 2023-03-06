@@ -3,16 +3,19 @@ import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
 import IconButton from '@mui/material/IconButton';
-// import StarBorderIcon from '@mui/icons-material/StarBorder';
 import axios from 'axios';
 
 import { ALL_CARDS } from '../utils/cards';
+import { ALL_BACKGROUNDS } from "../utils/cardbackground";
+import { Button , Input} from "@mui/material";
+
 
 interface CardPollRef {
     putCardBack : (cardId : string) => void
 }
 
 interface CardPollProps {
+    deck : string[],
     pickfn : (cardid:string)=>void
 }
 
@@ -30,6 +33,18 @@ const CardPoll = forwardRef((props : CardPollProps, ref : Ref<CardPollRef>)=>{
     const [cards, setCards] = useState<{[id: string] : number}>(
         Object.keys(ALL_CARDS).reduce((prv, key) => ({...prv , [key] : numType}), {})
     );
+    
+
+    useEffect(()=>{
+        //  Init 
+        const copyCards = {...cards}
+        for (const cardid of props.deck){
+            copyCards[cardid] --;
+        }
+        setCards(copyCards);
+    }, [])
+    
+
 
     function takeCard(cardId : string):boolean{
         const idCardCount = cards[cardId]
@@ -81,8 +96,10 @@ interface UserDeckRef {
 
 interface UserDeckProp{
     deck : string[],
-    deckid : string,
-    dropfn : (cardid: string)=>void
+    deckid? : string,
+    deckname? : string,
+    dropfn : (cardid: string)=>void,
+    notify : ()=>void,
 }
 
 const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
@@ -92,8 +109,26 @@ const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
         deckC[i] ? deckC[i]++ : deckC[i] = 1
     }
 
-    const deckId = props.deckid;
+    
     const [deckCounter, setDeckCounter] = useState<{[id: string] : number}>(deckC);
+    const [deckName, setDeckName] = useState(props.deckname ? props.deckname : "");
+
+    async function deckUpdate(){
+        const toListDeck : string[] = Object.entries(deckCounter).flatMap(([cardid,count])=>{
+            return Array(count).fill(cardid)
+        })
+        try{
+            if(props.deckid){// Update deck
+                await axios.put(`/api/deckManager/deck/${props.deckid}`, {deck : toListDeck, deckName : deckName})
+            }else{// Creating New Deck
+                await axios.post("/api/deckManager/deck", {deck : toListDeck, deckName : deckName})
+            }
+            props.notify() // Tells parent a new deck is posted
+            console.log("success")
+        }catch(e : any){
+            console.log("INVALID DECK", e.message)
+        }
+    }
 
 
 
@@ -117,28 +152,96 @@ const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
     }))
 
     return (
-        <ImageList sx={{ width: 100}} cols={1} rowHeight={25}>
-            {   
-                Object.entries(deckCounter).map(([cardid, count])=>{
-                    return <ImageListItem key={cardid+count}>
-                        <div style={{ position: 'relative' }}>
-                            <img
-                                src={ALL_CARDS[cardid]}
-                                alt={cardid}
-                                loading="lazy"
-                                onClick={()=>{console.log("giao"); removeCard(cardid) && props.dropfn(cardid)} }
-                            />
-                            {/* The label with number of card */}
-                            <div style={{ color:"white", position: 'absolute', top: '3px', right: '20px', padding: '5px' }}>
-                                {count}
+        <>
+            <Input
+                type="text"
+                placeholder="Deck Name"
+                required
+                onChange={(e) => {
+                    setDeckName(e.target.value);
+                }}
+                defaultValue={deckName}
+                />
+
+            <ImageList sx={{ width: 100}} cols={1} rowHeight={25}>
+                {   
+                    Object.entries(deckCounter).map(([cardid, count])=>{
+                        return <ImageListItem key={cardid+count}>
+                            <div style={{ position: 'relative' }}>
+                                <img
+                                    src={ALL_CARDS[cardid]}
+                                    alt={cardid}
+                                    loading="lazy"
+                                    onClick={()=>{removeCard(cardid) && props.dropfn(cardid)} }
+                                />
+                                {/* The label with number of card */}
+                                <div style={{ color:"white", position: 'absolute', top: '3px', right: '20px', padding: '5px' }}>
+                                    {count}
+                                </div>
                             </div>
-                        </div>
-                    </ImageListItem>
-                })
-            }
-        </ImageList>
+                        </ImageListItem>
+                    })
+                }
+            </ImageList>
+            <Button onClick={deckUpdate}> Save </Button>
+        </>
+        
     )
 })
+
+interface PickingPollProps{
+    updater : any, // Don't care as long as it changes
+    getSelected : (pickedDeck:string[], pickedDid:string)=>void
+
+}
+
+function PickingPool(props:PickingPollProps){
+    // Allows the user to pick from their existing deck
+    interface deckData{
+        deckid : string,
+        deckname: string,
+        deck : string[],
+    }
+
+    const [decks, setDecks] = useState<deckData[]>([])
+    useEffect(()=>{
+        async function updatePool(){
+            try{
+                const allDecks = await axios.get("/api/deckManager/deck");
+                const userDecks : deckData[] = allDecks.data.decks;
+                setDecks(userDecks);
+            }catch(e : any){
+                console.log("Deck fetching failed", e.response)
+            }
+        }
+        updatePool();
+    }, [props.updater])
+    
+
+    return (
+        <>
+            <ImageList sx={{ width: 100}} cols={1} rowHeight={25}>
+                {
+                    decks.map((deckData)=>{
+                        return <ImageListItem key={deckData.deckid}> 
+                            <div style={{ position: 'relative' }}>
+                                 <img
+                                    src={ALL_BACKGROUNDS["1"]}
+                                    alt={"This is suppose to be some description"}
+                                    loading="lazy"
+                                    onClick={()=>{props.getSelected(deckData.deck, deckData.deckid)}}
+                                />
+                                <div style={{ color:"white", position: 'absolute', top: '3px', right: '20px', padding: '5px' }}>
+                                    {deckData.deckname}
+                                </div>
+                            </div>
+                        </ImageListItem>
+                    })
+                }
+            </ImageList>
+        </>
+    )
+}
 
 
 
@@ -146,7 +249,8 @@ export default function Deck() {
     // Assume user have login cookie
     const cardPollRef = useRef<CardPollRef>(null);
     const userDeckRef = useRef<UserDeckRef>(null);
-    // const [picked, setPicked] =  useState<{[deckId:string] : number[]}>({});
+    const [updating, setUpdating] = useState<boolean>(false);
+    const [curDeck, setCurDeck] = useState<{deck:string[], deckid:string}>({deck:["1", "2", "3", "4","5","6","7","8"],deckid:"123213"})
 
     useEffect(()=>{
         const upload = async()=>{
@@ -156,7 +260,6 @@ export default function Deck() {
                 console.log(e)
             }
         }
-
     }, [])
 
 
@@ -164,8 +267,9 @@ export default function Deck() {
         // <div style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
         // Currently testing | my screen is too small
         <div>
-            <div style={{ marginRight: '100px' }}>
+            <div style={{marginLeft:"10px", marginRight: '100px' }}>
                 <CardPoll 
+                    deck={curDeck.deck}
                     ref={cardPollRef}
                     pickfn = {(cardid : string) => {userDeckRef.current?.addCard(cardid)}}
                 /> 
@@ -174,9 +278,17 @@ export default function Deck() {
             <div>
                 <UserDeck 
                     ref={userDeckRef} 
-                    deck={["1", "2", "3", "4","5","6","7","8"]} 
-                    deckid="123123" 
-                    dropfn={(cardid : string)=>{ cardPollRef.current?.putCardBack(cardid) }} 
+                    deck={curDeck.deck} 
+                    deckid={curDeck.deckid} 
+                    dropfn={(cardid : string)=>{ cardPollRef.current?.putCardBack(cardid)}}
+                    notify={()=>{setUpdating(!updating)}}
+                />
+            </div>
+
+            <div>
+                <PickingPool
+                    updater={updating}
+                    getSelected={(pickedDeck,pickedDid)=>{ setCurDeck({deck:pickedDeck, deckid:pickedDid}) }}
                 />
             </div>
         </div>
