@@ -96,6 +96,11 @@ router.put("/deck/:deckid", async (req: DeckPutRequestBody, res: any) =>{
 router.get("/deck", async (req: any, res:any) =>{
     try{
         const decks = await db.all("select * from user_deck where userid = ?",[res.locals.userid]);
+        // Processing from "1,2,3,4" => "[1,2,3,4]"
+        for(let i = 0; i < decks.length; i++){
+            decks[i]["deck"] = decks[i]["deck"].split(",")
+        }
+
         return res.json({decks: decks});
     } catch (e){
         return res.status(500).json({error : "Server query error"});

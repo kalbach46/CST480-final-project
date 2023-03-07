@@ -1,8 +1,6 @@
-import React, { useEffect, useState, useRef, useImperativeHandle, forwardRef, Ref } from "react";
+import { useEffect, useState, useRef, useImperativeHandle, forwardRef, Ref } from "react";
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
-import ImageListItemBar from '@mui/material/ImageListItemBar';
-import IconButton from '@mui/material/IconButton';
 import axios from 'axios';
 
 import { ALL_CARDS } from '../utils/cards';
@@ -16,7 +14,8 @@ interface CardPollRef {
 
 interface CardPollProps {
     deck : string[],
-    pickfn : (cardid:string)=>void
+    pickfn : (cardid:string)=>void,
+    requiredCards : number,
 }
 
 const numType = 2; // Number of each type of card allowed
@@ -48,7 +47,8 @@ const CardPoll = forwardRef((props : CardPollProps, ref : Ref<CardPollRef>)=>{
 
     function takeCard(cardId : string):boolean{
         const idCardCount = cards[cardId]
-        if (idCardCount > 0){
+        const userHoldings = (Object.values(ALL_CARDS).length * numType) - Object.values(cards).reduce((a,b)=>a+b, 0)
+        if (idCardCount > 0 && userHoldings < props.requiredCards){
             const copyCards = {...cards}
             copyCards[cardId] = idCardCount - 1
             setCards(copyCards);
@@ -98,6 +98,7 @@ interface UserDeckProp{
     deck : string[],
     deckid? : string,
     deckname? : string,
+    requiredCards : number,
     dropfn : (cardid: string)=>void,
     notify : ()=>void,
 }
@@ -109,7 +110,6 @@ const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
         deckC[i] ? deckC[i]++ : deckC[i] = 1
     }
 
-    
     const [deckCounter, setDeckCounter] = useState<{[id: string] : number}>(deckC);
     const [deckName, setDeckName] = useState(props.deckname ? props.deckname : "");
 
@@ -126,7 +126,7 @@ const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
             props.notify() // Tells parent a new deck is posted
             console.log("success")
         }catch(e : any){
-            console.log("INVALID DECK", e.message)
+            console.log("INVALID DECK : ", e.response.data.message)
         }
     }
 
@@ -161,7 +161,7 @@ const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
                     setDeckName(e.target.value);
                 }}
                 defaultValue={deckName}
-                />
+            />
 
             <ImageList sx={{ width: 100}} cols={1} rowHeight={25}>
                 {   
@@ -183,16 +183,20 @@ const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
                     })
                 }
             </ImageList>
-            <Button onClick={deckUpdate}> Save </Button>
+            <Button 
+                onClick={deckUpdate} 
+                disabled={ Object.values(deckCounter).reduce((a, b) => a + b, 0) !== props.requiredCards}
+            > 
+                Save 
+            </Button>
         </>
         
     )
 })
 
 interface PickingPollProps{
-    updater : any, // Don't care as long as it changes
-    getSelected : (pickedDeck:string[], pickedDid:string)=>void
-
+    getSelected : (pickedDeck:string[], pickedDid:string, pickedDname:string)=>void,
+    maxDecks : number,
 }
 
 function PickingPool(props:PickingPollProps){
@@ -203,24 +207,28 @@ function PickingPool(props:PickingPollProps){
         deck : string[],
     }
 
+    const deckWidth = 100;
+    const deckHeight = 200;
     const [decks, setDecks] = useState<deckData[]>([])
+
     useEffect(()=>{
         async function updatePool(){
+            console.log("Fetching")
             try{
                 const allDecks = await axios.get("/api/deckManager/deck");
                 const userDecks : deckData[] = allDecks.data.decks;
                 setDecks(userDecks);
             }catch(e : any){
-                console.log("Deck fetching failed", e.response)
+                console.log("Deck fetching failed", e.response.data.error)
             }
         }
         updatePool();
-    }, [props.updater])
+    }, [])
     
 
     return (
         <>
-            <ImageList sx={{ width: 100}} cols={1} rowHeight={25}>
+            <ImageList sx={{ width: (Math.max(decks.length+1, props.maxDecks))*(deckWidth+10)}} cols={Math.max(decks.length+1, props.maxDecks)} rowHeight={deckHeight+10}>
                 {
                     decks.map((deckData)=>{
                         return <ImageListItem key={deckData.deckid}> 
@@ -229,15 +237,39 @@ function PickingPool(props:PickingPollProps){
                                     src={ALL_BACKGROUNDS["1"]}
                                     alt={"This is suppose to be some description"}
                                     loading="lazy"
-                                    onClick={()=>{props.getSelected(deckData.deck, deckData.deckid)}}
+                                    width={deckWidth}
+                                    height={deckHeight}
+                                    onClick={()=>{
+                                        props.getSelected(deckData.deck, deckData.deckid,deckData.deckname)
+                                    }}
                                 />
-                                <div style={{ color:"white", position: 'absolute', top: '3px', right: '20px', padding: '5px' }}>
+                                <div style={{ position: 'absolute', top: '3px', right: '20px', padding: '5px' }}>
                                     {deckData.deckname}
                                 </div>
                             </div>
                         </ImageListItem>
                     })
                 }
+                {
+                    decks.length >= props.maxDecks ? <></> : <ImageListItem key="new_deck"> 
+                    <div style={{ position: 'relative' }}>
+                        <img
+                            src={ALL_BACKGROUNDS["newDeck"]}
+                            alt={"This to start a new deck"}
+                            loading="lazy"
+                            width={deckWidth}
+                            height={deckHeight}
+                            onClick={()=>{
+                                props.getSelected([], "","")
+                            }}
+                        />
+                        <div style={{ position: 'absolute', top: '3px', right: '20px', padding: '5px' ,color:"white" }}>
+                            {"Start New Deck"}
+                        </div>
+                    </div>
+                </ImageListItem>
+                }
+                
             </ImageList>
         </>
     )
@@ -249,48 +281,51 @@ export default function Deck() {
     // Assume user have login cookie
     const cardPollRef = useRef<CardPollRef>(null);
     const userDeckRef = useRef<UserDeckRef>(null);
-    const [updating, setUpdating] = useState<boolean>(false);
-    const [curDeck, setCurDeck] = useState<{deck:string[], deckid:string}>({deck:["1", "2", "3", "4","5","6","7","8"],deckid:"123213"})
+    const [curDeck, setCurDeck] = useState<{deck:string[], deckid:string, deckname:string}>({deck:[],deckid:"",deckname:""});
+    const [updating, setUpdating] = useState<number>(0);
+    const [reFetcher, setReFetecher] = useState<number>(0);
 
-    useEffect(()=>{
-        const upload = async()=>{
-            try{
-                
-            }catch(e : any){
-                console.log(e)
-            }
-        }
-    }, [])
+    const requiredNumCards = 10;
+    const allowedDecks = 5;
+
+    useEffect(() => { // Update force re-render
+        setUpdating(updating+1)
+    }, [curDeck]);
 
 
     return (
-        // <div style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
-        // Currently testing | my screen is too small
-        <div>
-            <div style={{marginLeft:"10px", marginRight: '100px' }}>
-                <CardPoll 
-                    deck={curDeck.deck}
-                    ref={cardPollRef}
-                    pickfn = {(cardid : string) => {userDeckRef.current?.addCard(cardid)}}
-                /> 
-            </div>
+        <>
+            <div key={updating} style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
+                <div style={{marginLeft:"10px", marginRight: '100px' }}>
+                    <CardPoll 
+                        deck={curDeck.deck}
+                        requiredCards={requiredNumCards}
+                        ref={cardPollRef}
+                        pickfn = {(cardid : string) => {userDeckRef.current?.addCard(cardid)}}
+                    /> 
+                </div>
 
-            <div>
-                <UserDeck 
-                    ref={userDeckRef} 
-                    deck={curDeck.deck} 
-                    deckid={curDeck.deckid} 
-                    dropfn={(cardid : string)=>{ cardPollRef.current?.putCardBack(cardid)}}
-                    notify={()=>{setUpdating(!updating)}}
-                />
+                <div>
+                    <UserDeck 
+                        ref={userDeckRef} 
+                        deck={curDeck.deck} 
+                        deckid={curDeck.deckid} 
+                        deckname={curDeck.deckname}
+                        requiredCards={requiredNumCards}
+                        dropfn={(cardid : string)=>{ cardPollRef.current?.putCardBack(cardid)}}
+                        notify={()=>{setReFetecher(reFetcher+1)}}
+                    />
+                </div>
             </div>
-
             <div>
                 <PickingPool
-                    updater={updating}
-                    getSelected={(pickedDeck,pickedDid)=>{ setCurDeck({deck:pickedDeck, deckid:pickedDid}) }}
+                    key={reFetcher}
+                    maxDecks={allowedDecks}
+                    getSelected={(pickedDeck,pickedDid,pickedDname)=>{ 
+                        setCurDeck({deck:pickedDeck, deckid:pickedDid, deckname:pickedDname})
+                    }}
                 />
             </div>
-        </div>
+        </>
     )
 }
