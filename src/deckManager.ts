@@ -20,8 +20,6 @@ router.use((req, res, next) => {
     res.locals.userid = getUser(req.cookies.token);
     next();
 })
-// Add cred middleware here -> Waitig now
-// router.use(credientialMiddleware);
 
 export let db = await open({filename: "../database.db",driver: sqlite3.Database,});
 await db.get("PRAGMA foreign_keys = ON");
@@ -122,7 +120,7 @@ router.get("/deck/:deckid", async (req: any, res:any) =>{
 
 
 router.delete("/deck/:deckid", async (req: any, res:any) =>{
-    const deleteStatement = await db.prepare("delete from user_decks where deckid=? and user_id=?");
+    const deleteStatement = await db.prepare("delete from user_deck where deckid=? and userid=?");
     await deleteStatement.bind([req.params.deckid, res.locals.userid]);
     try{
         deleteStatement.run();

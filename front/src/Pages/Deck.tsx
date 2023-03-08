@@ -5,8 +5,10 @@ import axios from 'axios';
 
 import { ALL_CARDS } from '../utils/cards';
 import { ALL_BACKGROUNDS } from "../utils/cardbackground";
-import { Button , Input} from "@mui/material";
+import { Button } from "@mui/material";
 
+import Input from '@mui/joy/Input';
+import { FormLabel,  FormControl} from "@mui/joy";
 
 interface CardPollRef {
     putCardBack : (cardId : string) => void
@@ -25,7 +27,7 @@ const CardPoll = forwardRef((props : CardPollProps, ref : Ref<CardPollRef>)=>{
     const ROW_HEIGHT = 164;
     const CARDS_PER_ROW = 10;
     const NUM_CARDS : number = Object.keys(ALL_CARDS).length;
-    const TOTAL_HEIGHT = ROW_HEIGHT * Math.ceil(NUM_CARDS / CARDS_PER_ROW);
+    const TOTAL_HEIGHT = ROW_HEIGHT * Math.ceil(NUM_CARDS / CARDS_PER_ROW)+ 20; // offset
     const TOTAL_WIDTH = Math.ceil(ROW_HEIGHT * CARDS_PER_ROW / 2);
 
     // https://stackoverflow.com/questions/36467369/looping-through-an-object-and-changing-all-values
@@ -152,18 +154,21 @@ const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
     }))
 
     return (
-        <>
-            <Input
-                type="text"
-                placeholder="Deck Name"
-                required
-                onChange={(e) => {
-                    setDeckName(e.target.value);
-                }}
-                defaultValue={deckName}
-            />
+        <form onSubmit={ (e)=>{ e.preventDefault(); deckUpdate()}} style={{height:"500px"}}>
+            <FormControl>
+                <FormLabel>Deck Name</FormLabel>
+                <Input
+                    type="text"
+                    placeholder="Deck Name"
+                    required
+                    onChange={(e) => {
+                        setDeckName(e.target.value);
+                    }}
+                    defaultValue={deckName}
+                />
+            </FormControl>
 
-            <ImageList sx={{ width: 100}} cols={1} rowHeight={25}>
+            <ImageList sx={{ width: 100}} cols={1} rowHeight={25} >
                 {   
                     Object.entries(deckCounter).map(([cardid, count])=>{
                         return <ImageListItem key={cardid+count}>
@@ -183,21 +188,54 @@ const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
                     })
                 }
             </ImageList>
-            <Button 
-                onClick={deckUpdate} 
+
+            <Input
+                type="submit" 
+                value="Save Deck"
                 disabled={ Object.values(deckCounter).reduce((a, b) => a + b, 0) !== props.requiredCards}
-            > 
-                Save 
-            </Button>
-        </>
-        
+            />
+        </form>
     )
 })
+
+function ImageWithButton(props : any) {// some AI gain stuff here
+    const [showButton, setShowButton] = useState(false);
+
+    const handleMouseEnter = () => {
+        setShowButton(true);
+    };
+
+    const handleMouseLeave = () => {
+        setShowButton(false);
+    };
+
+    return (
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+            <img
+                src={props.src}
+                alt={props.alt}
+                loading="lazy"
+                height={props.height}
+                width={props.width}
+                onClick={props.onClick}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+            />
+            {showButton && (
+                <div style={{ position: 'absolute', top: 0, right: 0 }} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+                {props.button}
+                </div>
+            )}
+        </div>
+    );
+}
+
 
 interface PickingPollProps{
     getSelected : (pickedDeck:string[], pickedDid:string, pickedDname:string)=>void,
     maxDecks : number,
 }
+
 
 function PickingPool(props:PickingPollProps){
     // Allows the user to pick from their existing deck
@@ -211,19 +249,34 @@ function PickingPool(props:PickingPollProps){
     const deckHeight = 200;
     const [decks, setDecks] = useState<deckData[]>([])
 
+    const [deleting, setDeleting] = useState<number>(1);
+
     useEffect(()=>{
         async function updatePool(){
             console.log("Fetching")
             try{
                 const allDecks = await axios.get("/api/deckManager/deck");
                 const userDecks : deckData[] = allDecks.data.decks;
+                if (userDecks.length !== 0){
+                    const deckData = userDecks[0];
+                    props.getSelected(deckData.deck, deckData.deckid,deckData.deckname)
+                }
                 setDecks(userDecks);
             }catch(e : any){
                 console.log("Deck fetching failed", e.response.data.error)
             }
         }
         updatePool();
-    }, [])
+    }, [deleting])
+
+    async function deleter(deckid : string){
+        try{
+            await axios.delete(`/api/deckManager/deck/${deckid}`);
+            setDeleting(deleting+1); // Rerender
+        }catch(e : any){
+            console.log("Deck Delete failed",  e.response.data.error); // again, shouldn't happen 
+        }
+    }
     
 
     return (
@@ -233,17 +286,28 @@ function PickingPool(props:PickingPollProps){
                     decks.map((deckData)=>{
                         return <ImageListItem key={deckData.deckid}> 
                             <div style={{ position: 'relative' }}>
-                                 <img
+                                <ImageWithButton
                                     src={ALL_BACKGROUNDS["1"]}
                                     alt={"This is suppose to be some description"}
-                                    loading="lazy"
                                     width={deckWidth}
                                     height={deckHeight}
                                     onClick={()=>{
                                         props.getSelected(deckData.deck, deckData.deckid,deckData.deckname)
                                     }}
+                                    button={<Button
+                                        variant="contained"
+                                        onClick={()=>{ window.confirm(`Are you sure to delete deck : <${deckData.deckname}> ?`) && deleter(deckData.deckid) }}
+                                        sx={{
+                                            height:"20px",
+                                            width:"10px",
+                                            backgroundColor: "white",
+                                            color: "black",
+                                            minWidth: "unset",
+                                            borderRadius: "50%",
+                                        }}
+                                    >X</Button>}
                                 />
-                                <div style={{ position: 'absolute', top: '3px', right: '20px', padding: '5px' }}>
+                                <div style={{ position: 'absolute', top: '50px', left: '10px', padding: '5px' }}>
                                     {deckData.deckname}
                                 </div>
                             </div>
@@ -317,6 +381,7 @@ export default function Deck() {
                     />
                 </div>
             </div>
+
             <div>
                 <PickingPool
                     key={reFetcher}
