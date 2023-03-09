@@ -11,7 +11,21 @@ export const DeckSchema = z.object({
     deckName: string().min(1),
 })
 
+const MessageSchema = z.object({
+  message: z.string(),
+});
+
+const ErrorSchema = z.object({
+  error: z.string(),
+});
+
+
 
 export type DeckBody = z.infer<typeof DeckSchema>
 export type DeckPOSTRequestBody = Request<{}, {}, DeckBody>
 export type DeckPutRequestBody = Request<{ deckid: string}, {}, DeckBody>
+export type DeckGetRequest = Request<{deckid:string}, {}, {}>
+
+type Message = z.infer<typeof MessageSchema>;
+type Error = z.infer<typeof ErrorSchema>;
+export type ErrorOrMessageRes = Response<Message | Error>;

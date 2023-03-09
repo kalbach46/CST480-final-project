@@ -1,4 +1,4 @@
-import { DeckSchema, DeckPOSTRequestBody, DeckPutRequestBody,DECK_SIZE } from './deckManager.type.js'
+import { DeckSchema, DeckPOSTRequestBody, DeckPutRequestBody, ErrorOrMessageRes, DeckGetRequest } from './deckManager.type.js'
 import express from "express";
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
@@ -27,7 +27,7 @@ await db.get("PRAGMA foreign_keys = ON");
 const ALLOWED_NUM_DECKS = 5;
 const MAX_DUPLICATE = 2;
 
-router.post("/deck", async (req: DeckPOSTRequestBody, res: any) =>{
+router.post("/deck", async (req: DeckPOSTRequestBody, res: ErrorOrMessageRes) =>{
     const deckBody = DeckSchema.safeParse(req.body);
     if (!deckBody.success){ // Should be handled better in UI
         return res.status(400).json({message : "Deck | name given not valid"});
@@ -43,8 +43,11 @@ router.post("/deck", async (req: DeckPOSTRequestBody, res: any) =>{
     }
 
     // Check replicates in deck | Can't think of a way using zod
-    const uniqueCards = new Set(deck);
-    if (uniqueCards.size * MAX_DUPLICATE < DECK_SIZE){
+    const occurrences = deck.reduce(function (acc : {[id:string] : number}, curr : string) {
+        return acc[curr] ? ++acc[curr] : acc[curr] = 1, acc
+    }, {});
+
+    if (Math.max(...Object.values(occurrences)) > MAX_DUPLICATE){
         return res.status(400).json({message : `Your deck has replicates greater than ${MAX_DUPLICATE}`})
     }
 
@@ -62,7 +65,7 @@ router.post("/deck", async (req: DeckPOSTRequestBody, res: any) =>{
 })
 
 // This make it hard to test, but is fine for UI | I will send the deck id with.
-router.put("/deck/:deckid", async (req: DeckPutRequestBody, res: any) =>{
+router.put("/deck/:deckid", async (req: DeckPutRequestBody, res: ErrorOrMessageRes) =>{
     const deckBody = DeckSchema.safeParse(req.body);
     if (!deckBody.success){ // Should be handled better in UI
         return res.status(400).json({message : "Deck | name given not valid"});
@@ -73,8 +76,11 @@ router.put("/deck/:deckid", async (req: DeckPutRequestBody, res: any) =>{
     const deckid = req.params.deckid
 
     // Check replicates in deck | Can't think of a way using zod
-    const uniqueCards = new Set(deck);
-    if (uniqueCards.size * MAX_DUPLICATE < DECK_SIZE){
+    const occurrences = deck.reduce(function (acc : {[id:string] : number}, curr : string) {
+        return acc[curr] ? ++acc[curr] : acc[curr] = 1, acc
+    }, {});
+
+    if (Math.max(...Object.values(occurrences)) > MAX_DUPLICATE){
         return res.status(400).json({message : `Your deck has replicates greater than ${MAX_DUPLICATE}`})
     }
 
@@ -91,7 +97,7 @@ router.put("/deck/:deckid", async (req: DeckPutRequestBody, res: any) =>{
 })
 
 // Get all decks for user
-router.get("/deck", async (req: any, res:any) =>{
+router.get("/deck", async (_: DeckGetRequest, res:any) =>{
     try{
         const decks = await db.all("select * from user_deck where userid = ?",[res.locals.userid]);
         // Processing from "1,2,3,4" => "[1,2,3,4]"
@@ -106,20 +112,23 @@ router.get("/deck", async (req: any, res:any) =>{
 })
 
 // Get deck for user by id
-router.get("/deck/:deckid", async (req: any, res:any) =>{
+router.get("/deck/:deckid", async (req: DeckGetRequest, res:any) =>{
     try{
-        const decks = await db.get("select * from user_decks where userid=? and deckid = ?",[res.locals.userid, req.params.deckid]);
+        const decks = await db.get("select * from user_deck where userid=? and deckid = ?",[res.locals.userid, req.params.deckid]);
         if (decks === undefined){
             return res.status(403).json({error : "Deck not found"});
         }
+
+        decks["deck"] = decks["deck"].split(",")
         return res.json({decks: [decks]});
     } catch (e){
+        console.log(e)
         return res.status(500).json({error : "Server query error"});
     }
 })
 
 
-router.delete("/deck/:deckid", async (req: any, res:any) =>{
+router.delete("/deck/:deckid", async (req: DeckGetRequest, res:ErrorOrMessageRes) =>{
     const deleteStatement = await db.prepare("delete from user_deck where deckid=? and userid=?");
     await deleteStatement.bind([req.params.deckid, res.locals.userid]);
     try{
