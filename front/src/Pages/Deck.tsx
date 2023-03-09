@@ -10,6 +10,8 @@ import { Button } from "@mui/material";
 import Input from '@mui/joy/Input';
 import { FormLabel,  FormControl} from "@mui/joy";
 
+import Navbar from '../Components/Navbar';
+
 interface CardPollRef {
     putCardBack : (cardId : string) => void
 }
@@ -359,6 +361,7 @@ export default function Deck() {
 
     return (
         <>
+            <Navbar/>
             <div key={updating} style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
                 <div style={{marginLeft:"10px", marginRight: '100px' }}>
                     <CardPoll 
