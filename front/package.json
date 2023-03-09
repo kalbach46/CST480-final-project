@@ -5,6 +5,7 @@
   "dependencies": {
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
+    "@mui/joy": "^5.0.0-alpha.70",
     "@mui/material": "^5.11.10",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -27,7 +28,7 @@
   },
   "scripts": {
     "start": "set PORT=3001 && react-scripts start",
-    "start-linux" : "PORT=3001 react-scripts start",
+    "start-linux": "PORT=3001 react-scripts start",
     "build": "react-scripts build && mv build ../out/public",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
