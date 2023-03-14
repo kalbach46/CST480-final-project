@@ -8,13 +8,15 @@ import { accountManager } from "./accountManager.js";
 import { gameManager } from "./gameManager.js";
 let app = express();
 app.use(express.json());
-let tokens = [];
-export function addToken(token) {
-    tokens.push(token);
-    console.log("TOKENS:", tokens);
+let tokens = {};
+export function addToken(token, userid) {
+    tokens[token] = userid;
 }
 export function verifyToken(token) {
-    return tokens.indexOf(token) != -1;
+    return tokens[token] != null;
+}
+export function getUser(token) {
+    return tokens[token];
 }
 let __dirname = url.fileURLToPath(new URL("..", import.meta.url));
 let dbfile = `${__dirname}database.db`;
@@ -23,9 +25,9 @@ let db = await open({
     driver: sqlite3.Database,
 });
 await db.get("PRAGMA foreign_keys = ON");
-app.use('/deckManager', deckManager);
-app.use('/accountManager', accountManager);
-app.use('/gameManager', gameManager);
+app.use('/api/deckManager', deckManager);
+app.use('/api/accountManager', accountManager);
+app.use('/api/gameManager', gameManager);
 let port = 3000;
 let host = "localhost";
 let protocol = "http";

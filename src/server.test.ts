@@ -8,8 +8,9 @@ let host = "localhost";
 let protocol = "http";
 let api = "api";
 let accountManager = "accountManager";
+let deckManager = "deckManager";
 let authUrl = `${protocol}://${host}:${port}/${api}/${accountManager}`;
-
+let deckUrl = `${protocol}://${host}:${port}/${api}/${deckManager}`;
 
 let __dirname = url.fileURLToPath(new URL("..", import.meta.url));
 let dbfile = `${__dirname}database.db`;
@@ -162,6 +163,158 @@ describe("Login tests", () => {
     });
 })
 
+
+const DECK_NAME = "DeckName";
+const DECK = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+
+// Deck handling test
+describe("Deck tests", () => {
+    const deckReq = async ()=>{
+        await axios.post(`${deckUrl}/deck`, {
+            deckName : DECK_NAME,
+            deck : DECK,
+        });
+    }
+
+    const getFirstDeckId = async()=>{
+        let result : any = await axios.get(`${deckUrl}/deck`);
+        return result.data.decks[0].deckid;
+    }
+
+    test("not logged in actions", async()=>{ // This has to be run FIRST, since we don't have logout
+        const failGet = async ()=>{
+            return await axios.get(`${deckUrl}/deck`);
+        }
+        const failPost = async ()=>{
+            return await axios.post(`${deckUrl}/deck`);
+        }
+        const failPut = async ()=>{
+            return await axios.put(`${deckUrl}/deck/123`);
+        }
+        const failDelete = async ()=>{
+            return await axios.delete(`${deckUrl}/deck/123`);
+        }
+
+        for(const i of [failGet, failPost, failPut, failDelete]){
+            const result = await i();
+            expect(result.data).toEqual("invalid token")
+        }
+    })
+
+    test("build deck happy path", async()=>{
+        await initializeUser();
+        await loginUser();
+
+        let result = await axios.post(`${deckUrl}/deck`, {
+            deckName : DECK_NAME,
+            deck : DECK
+        });
+        expect(result.data).toEqual({ message: "Deck Added" });
+    });
+
+    test("build deck bad path", async()=>{
+        await initializeUser();
+        await loginUser();
+
+        const noDeck = async ()=>{
+            await axios.post(`${deckUrl}/deck`, {
+                deckName : DECK_NAME,
+                deck : [],
+            });
+        }
+
+        const noName = async ()=>{
+            await axios.post(`${deckUrl}/deck`, {
+                deckName : "",
+                deck : DECK,
+            });
+        }
+
+        const deckTooLarge = async ()=>{
+            await axios.post(`${deckUrl}/deck`, {
+                deckName : DECK_NAME,
+                deck : ['1', '1', '1', '2', '4', '5', '6', '7', '8', '9'],
+            });
+        }
+
+        expect(await failRequest(noDeck, 400, {message : "Deck | name given not valid"})).toEqual(true);
+        expect(await failRequest(noName, 400, {message : "Deck | name given not valid"})).toEqual(true);
+        expect(await failRequest(deckTooLarge, 400, {message : "Your deck has replicates greater than 2"})).toEqual(true);
+    });
+
+    test("have too much deck and still build", async()=>{
+        await initializeUser();
+        await loginUser();
+
+        for(let i = 0; i < 5; i++){
+            await deckReq();
+        }
+        expect(await failRequest(deckReq, 400, {message : "You have too much deck, can't add new one"})).toEqual(true);
+    })
+
+    test("get all deck", async()=>{
+        await initializeUser();
+        await loginUser();
+
+        await deckReq();
+        let result = await axios.get(`${deckUrl}/deck`)
+        expect(result.data.decks).toBeTruthy();
+    })
+
+    test("get single deck", async()=>{
+        await initializeUser();
+        await loginUser();
+
+        await deckReq();
+        const did = await getFirstDeckId();
+        let result = await axios.get(`${deckUrl}/deck/${did}`)
+        expect(result.data.decks).toBeTruthy();
+    })
+
+
+    test("update deck happy", async()=>{
+        await initializeUser();
+        await loginUser();
+
+        await deckReq();
+        const did = await getFirstDeckId();
+        let result = await axios.put(`${deckUrl}/deck/${did}`, {
+            deckName : "NEW_DECK",
+            deck : DECK
+        });
+        expect(result.data).toEqual({ message: "Deck Updated" });
+    })
+
+    test("update deck invalid", async()=>{
+        await initializeUser();
+        await loginUser();
+        await deckReq();
+        const did = await getFirstDeckId();
+
+        const badPut = async()=>{
+            await axios.put(`${deckUrl}/deck/${did}`, {
+                deckName : "NEW_DECK",
+                deck : []
+            });
+        }
+
+        expect(await failRequest(badPut, 400, {message : "Deck | name given not valid"})).toEqual(true);
+    })
+
+    test("delete deck happy", async()=>{
+        await initializeUser();
+        await loginUser();
+        await deckReq();
+        const did = await getFirstDeckId();
+
+        const result = await axios.delete(`${deckUrl}/deck/${did}`);
+        expect(result.data).toEqual({message : "deck deleted"});
+    })
+
+})
+
+
+
 //GET USER TESTS
 // describe("Get user tests", () => {
 //     test("get user happy path", async () => {
@@ -224,4 +377,36 @@ async function initializeUser() {
         username:username,
         password:password
     });
+}
+
+async function loginUser() {
+    const username:string = USERNAME;
+    const password:string = PASSWORD;
+
+    const result = await axios.put(`${authUrl}/login`, {
+        username:username,
+        password:password
+    });
+
+    axios.defaults.headers.common['Cookie'] = `token=${result.data.token}`;
+    axios.defaults.withCredentials = true;
+}
+
+async function failRequest(axiosFn : any, status : number, res : any){
+    try{
+        await axiosFn()
+        return false
+    } catch (error) {
+        let errorObj = error as AxiosError;
+
+        if (errorObj.response === undefined) {
+            throw errorObj;
+        }
+
+        let { response } = errorObj;
+
+        expect(response.status).toEqual(status);
+        expect(response.data).toEqual(res);
+        return true
+    }
 }
