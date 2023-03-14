@@ -3,7 +3,7 @@ import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import axios from 'axios';
 
-import { ALL_CARDS } from '../utils/cards';
+import { ALL_CARDS, ALL_CARD_STAT } from '../utils/cards';
 import { ALL_BACKGROUNDS } from "../utils/cardbackground";
 import { Button } from "@mui/material";
 
@@ -74,18 +74,23 @@ const CardPoll = forwardRef((props : CardPollProps, ref : Ref<CardPollRef>)=>{
 
     return (
         // Width = Height / 2
-        <ImageList sx={{ width: TOTAL_WIDTH, height: TOTAL_HEIGHT,}} cols={CARDS_PER_ROW} rowHeight={ROW_HEIGHT}>
+        <ImageList sx={{ width: TOTAL_WIDTH+100, height: TOTAL_HEIGHT,}} cols={CARDS_PER_ROW} rowHeight={ROW_HEIGHT}>
             {
                 Object.entries(ALL_CARDS).map(([id, img])=>{
                     const stillAva = (cards[id]) === 0;
                     return <ImageListItem key={id}>
-                        <img
-                            src={img}
-                            alt={id}
-                            loading="lazy"
-                            style={{filter : `grayscale(${stillAva ? 100 : 0}%)`}}
-                            onClick={()=>{takeCard(id) && props.pickfn(id) } }
-                        />
+                        <div style={{position: "relative", textAlign: "center", color: "white"}}>
+                            <img
+                                src={img}
+                                alt={id}
+                                loading="lazy"
+                                style={{filter : `grayscale(${stillAva ? 100 : 0}%)`}}
+                                onClick={()=>{takeCard(id) && props.pickfn(id) } }
+                            />
+                            <div style={{position:"absolute",bottom:"8px",left:"16px",background:"black",borderRadius:"25%"}}>{ALL_CARD_STAT[id].attack}</div>
+                            <div style={{position:"absolute",bottom:"8px",right:"16px",background:"red",borderRadius:"25%"}}>{ALL_CARD_STAT[id].hp}</div>
+                        </div>
+                        
                     </ImageListItem>
                 })
             }
@@ -170,19 +175,20 @@ const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
                 />
             </FormControl>
 
-            <ImageList sx={{ width: 100}} cols={1} rowHeight={25} >
+            <ImageList sx={{ width: 200}} cols={1} rowHeight={25} >
                 {   
                     Object.entries(deckCounter).map(([cardid, count])=>{
                         return <ImageListItem key={cardid+count}>
                             <div style={{ position: 'relative' }}>
                                 <img
+                                    style={{ height:"24px", width:"164px", position:"absolute",objectFit: "none", objectPosition: "center"}}
                                     src={ALL_CARDS[cardid]}
                                     alt={cardid}
                                     loading="lazy"
                                     onClick={()=>{removeCard(cardid) && props.dropfn(cardid)} }
                                 />
                                 {/* The label with number of card */}
-                                <div style={{ color:"white", position: 'absolute', top: '3px', right: '20px', padding: '5px' }}>
+                                <div style={{ background:"black", color:"white", position: 'absolute', top: '3px', right: '20px', padding: '5px' }}>
                                     {count}
                                 </div>
                             </div>
@@ -309,7 +315,7 @@ function PickingPool(props:PickingPollProps){
                                         }}
                                     >X</Button>}
                                 />
-                                <div style={{ position: 'absolute', top: '50px', left: '10px', padding: '5px' }}>
+                                <div style={{ position: 'absolute', top: '3px', right: '20px', padding: '5px' , background: "black", color: "white" }}>
                                     {deckData.deckname}
                                 </div>
                             </div>
@@ -329,8 +335,8 @@ function PickingPool(props:PickingPollProps){
                                 props.getSelected([], "","")
                             }}
                         />
-                        <div style={{ position: 'absolute', top: '3px', right: '20px', padding: '5px' ,color:"white" }}>
-                            {"Start New Deck"}
+                        <div style={{ position: 'absolute', background:"black", top: '3px', right: '20px', padding: '5px' ,color:"white" }}>
+                            {"New Deck"}
                         </div>
                     </div>
                 </ImageListItem>

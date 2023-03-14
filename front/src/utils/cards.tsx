@@ -23,7 +23,7 @@ import card18 from "../assets/images/cards/image18.png";
 import card19 from "../assets/images/cards/image19.png";
 import card20 from "../assets/images/cards/image20.png";
 
-export const ALL_CARDS: {[id: string]: string} = {
+export const ALL_CARDS: { [id: string]: string } = {
   "1": card1,
   "2": card2,
   "3": card3,
@@ -44,4 +44,39 @@ export const ALL_CARDS: {[id: string]: string} = {
   "18": card18,
   "19": card19,
   "20": card20,
+};
+
+// From:
+// random.seed(0)
+// TOTAL = 100
+// STATS = [(attack, TOTAL - attack) for attack in [randint(5,35) for _ in range(20)]]
+
+// INIT_CHARACTERS = {
+//     str(i) : {
+//         "attack" : attack,
+//         "hp" : hp
+//     } for i, (attack, hp) in enumerate(STATS, start=1)
+// }
+
+export const ALL_CARD_STAT : {[id : string] : {attack : number, hp : number}} = {
+  "1": { attack: 32, hp: 68 },
+  "2": { attack: 17, hp: 83 },
+  "3": { attack: 29, hp: 71 },
+  "4": { attack: 33, hp: 67 },
+  "5": { attack: 18, hp: 82 },
+  "6": { attack: 6, hp: 94 },
+  "7": { attack: 13, hp: 87 },
+  "8": { attack: 35, hp: 65 },
+  "9": { attack: 21, hp: 79 },
+  "10": { attack: 20, hp: 80 },
+  "11": { attack: 17, hp: 83 },
+  "12": { attack: 34, hp: 66 },
+  "13": { attack: 30, hp: 70 },
+  "14": { attack: 31, hp: 69 },
+  "15": { attack: 14, hp: 86 },
+  "16": { attack: 35, hp: 65 },
+  "17": { attack: 20, hp: 80 },
+  "18": { attack: 16, hp: 84 },
+  "19": { attack: 23, hp: 77 },
+  "20": { attack: 33, hp: 67 },
 };
