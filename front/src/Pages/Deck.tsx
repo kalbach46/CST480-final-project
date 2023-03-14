@@ -181,7 +181,7 @@ const UserDeck = forwardRef((props : UserDeckProp, ref : Ref<UserDeckRef>)=>{
                         return <ImageListItem key={cardid+count}>
                             <div style={{ position: 'relative' }}>
                                 <img
-                                    style={{ height:"24px", width:"164px", position:"absolute",objectFit: "none", objectPosition: "center"}}
+                                    style={{ height:"24px", width:"164px", position:"absolute",objectFit: "cover", objectPosition: "0px -40px"}}
                                     src={ALL_CARDS[cardid]}
                                     alt={cardid}
                                     loading="lazy"
