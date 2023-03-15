@@ -1,7 +1,6 @@
 import Navbar from '../Components/Navbar';
 import React, { FC, useState, useCallback, useEffect } from "react";
 import axios from "axios";
-import { MessageResponse } from "./types";
 import { application, response } from 'express';
 import restProvider from 'ra-data-simple-rest';
 import { Unity, useUnityContext } from "react-unity-webgl";
