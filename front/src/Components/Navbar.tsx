@@ -6,6 +6,8 @@ import {AppBar, Button, Toolbar, Box} from '@mui/material';
 
 export default function Navbar(){
     const [currentUser, setCurrentUser] = useState<string>('');
+    const [userStat, setUserStat] = useState<string>('');
+
     let navigate:NavigateFunction = useNavigate();
 
     function handleLogout(){
@@ -20,7 +22,17 @@ export default function Navbar(){
           setCurrentUser(result.data.username)
         })
       };
+
+      const getCurrentUserStat = async () =>{
+        axios.get('/api/gameManager/stats')
+        .then((result) => {
+          const stat = result.data;
+          setUserStat(`${stat.win}/${stat.total}`)
+        })
+      }
+
       getCurrentUser();
+      getCurrentUserStat();
     }, [])
 
     return (
@@ -31,10 +43,10 @@ export default function Navbar(){
             <Button href="/deck">Deck</Button>
             <Button href="/game">Play</Button>
         </Box>
-        {currentUser==''?
+        {currentUser=='' ?
         <Button href="/login">Login</Button>:
         <div style={{color:"blue"}}>
-            {currentUser}
+            Hello Dear "{currentUser}"! ::::::::  Stats : {userStat}
             <Button onClick={() => {handleLogout()}}>Logout</Button>
         </div>
         }
