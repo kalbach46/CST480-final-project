@@ -69,9 +69,19 @@ router.post('/register', async (req, res) => {
         return res.status(400).json({ error : "username is already in use"});
     }
     let uuid = uuidv4();
-    addUser(uuid, username, password).then(() => {
-        res.status(200).send("user created successfully");
-    })
+
+
+    const insertRecord = await db.prepare("insert into user_stat(id, wins, total) values (?,?,?)");
+    await insertRecord.bind([uuid,0,0]);
+    
+    try {
+        await addUser(uuid, username, password); // Add user
+        await insertRecord.run();// add record
+        return res.status(200).send("user created successfully");
+    }catch (e){
+        res.status(500).json({ error: "Server ERROR" });
+    }
+
 })
 
 router.put('/login', async (req, res) => {
