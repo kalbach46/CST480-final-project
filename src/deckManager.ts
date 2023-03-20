@@ -105,6 +105,7 @@ router.get("/deck", async (_: DeckGetRequest, res:any) =>{
             decks[i]["deck"] = decks[i]["deck"].split(",")
         }
 
+        console.log(decks);
         return res.json({decks: decks});
     } catch (e){
         return res.status(500).json({error : "Server query error"});

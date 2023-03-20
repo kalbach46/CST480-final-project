@@ -1,10 +1,10 @@
 {
   "scripts": {
-    "setup": "rm -f database.db && sqlite3 database.db < setup.sql",
-    "build": "rm -rf out && mkdir out && tsc",
+    "setup": "rimraf database.db && sqlite3 database.db < setup.sql",
+    "build": "rimraf out && mkdir out && tsc",
     "start": "cd out && node server.js",
     "watch": "npm run build && tsc-watch --onSuccess \"npm run start\"",
-    "build:deploy": "rm -rf out && mkdir out && tsc && (cd front && npm run build)",
+    "build:deploy": "rimraf out && mkdir out && tsc && (cd front && npm run build)",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand --rootDir=src",
     "test-data": "npm run setup && sqlite3 database.db < insert.sql"
   },

@@ -23,7 +23,50 @@ export default function Game() {
     let sendUnityDecks = async () => {
         const allDecks = await axios.get("/api/deckManager/deck");
         const userDecks : deckData[] = allDecks.data.decks;
-        sendMessage("Manager", "GetDecks", userDecks);
+        const to3List = userDecks.reduce((prev : any[][], cur) => {
+            const copy = [...prev]
+            copy[0].push(cur.deckid);
+            copy[1].push(cur.deckname);
+            copy[2].push(cur.deck);
+            return copy
+        } , [[],[],[]])
+
+        const deckNames = to3List[1];
+        const decks = to3List[2];
+
+        unityMessage();
+
+        userDecks.forEach((deck: deckData) => {
+            console.log(deck);
+            console.log(deck.deck)
+            sendMessage("Manager", "GetDeckNames", deck.deckname);
+            deck.deck.forEach((card: string) => {
+                console.log(card);
+                sendMessage("Manager", "GetDecks", card)
+            })
+            //sendMessage("Manager", "GetCards", deck.deck);
+        })
+
+
+        /*deckNames.forEach(name => {
+            console.log("The name from front end ", name);
+            sendMessage("Manager", "GetDeckNames", String(name));
+        });
+
+        decks.forEach(deck => {
+            deck.foreach((card: string) => {
+                sendMessage("Manager", "GetDecks", card)
+                console.log("The card sent fron front end ", card)
+            })
+            //console.log(deck);
+            //sendMessage("Manager", "GetDecks", deck);
+        })*/
+
+        sendMessage("Manager", "Done");
+
+        //sendMessage("Manager", "GetDecks", to3List[0], to3List[1], to3List[2]);
+        //sendMessage("Manager", "GetDeckNames", deckNames[0]);
+        //sendMessage("Manager", "GetDecks", decks);
     };
     
 
@@ -39,9 +82,9 @@ export default function Game() {
         <div>
             <Navbar/>
             <p>GAME</p>
-            <button onClick={unityMessage}>Talk to Unity</button>
+            <button onClick={sendUnityDecks}>Talk to Unity</button>
             <div>
-            <Unity unityProvider={unityProvider} />
+            <Unity unityProvider={unityProvider} style= {{ width: 1000, height: 600 }} />
             </div>
         </div>
     )
