@@ -19,6 +19,22 @@ export default function Game() {
         sendMessage("Manager", "Message", 100);
     }
 
+
+    let sendUnityDecks = async () => {
+        const allDecks = await axios.get("/api/deckManager/deck");
+        const userDecks : deckData[] = allDecks.data.decks;
+        sendMessage("Manager", "GetDecks", userDecks);
+    };
+    
+
+    // Should look like 
+    interface deckData{
+        deckid : string,
+        deckname: string,
+        deck : string[],
+    }
+
+
     return (
         <div>
             <Navbar/>
